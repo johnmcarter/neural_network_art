@@ -29,6 +29,7 @@ def load_image(name):
     
     return im.to(device, torch.float)
 
+# Style image from https://www.pablopicasso.org/crucifixion.jsp
 style = load_image("images/crucifixion.jpg")
 content = load_image("images/plaza_de_espana.jpg")
 
