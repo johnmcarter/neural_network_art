@@ -4,6 +4,7 @@ https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 '''
 
 from PIL import Image
+from copy import deepcopy
 import matplotlib.pyplot as plt
 
 import torch
@@ -59,18 +60,65 @@ show_img(content, name="Content image")
 # import the pre-trained CNN
 cnn = models.vgg19(pretrained=True).features.to(device).eval()
 
+content_layers = ['conv_4']
+style_layers = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+
 mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
 std = torch.tensor([0.229, 0.224, 0.225]).to(device)
 
-def normalize(img, mean, std):
-    # Make dimensions of mean and std compatible, so -1 for the number of channels
-    # in the image and 1's for the height and width of the image
-    mean = torch.tensor(mean).view(-1, 1, 1)
-    std = torch.tensor(std).view(-1, 1, 1)
 
-    return (img - mean)/std
+def compute_gram(input):
+    dim_1, dim_2, dim_3, dim_4 = input.size()
+    feat_map = input.reshape(dim_1 * dim_2, dim_3 * dim_4)
 
-print(normalize(style, mean,std))
+    # Compute gram matrix as dot product of feat_map and feat_map transposed
+    gram_matrix = torch.mm(feat_map, feat_map.t())
+    #Normalize gram matrix by dividing by dimension sizes
+    gram_matrix = gram_matrix.div(dim_1 * dim_2 * dim_3 * dim_4)
 
-content_layers_default = ['conv_4']
-style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
+    return gram_matrix
+
+class Normalize(nn.Module):
+    def __init__(self, mean, std):
+        super(Normalize, self).__init__()
+        # Make dimensions of mean and std compatible, so -1 for the number of channels
+        # in the image and 1's for the height and width of the image
+        self.mean = torch.tensor(mean).reshape(-1, 1, 1)
+        self.std = torch.tensor(std).reshape(-1, 1, 1)
+
+    def forward(self, img):
+        #Normalize image
+        return (img - self.mean)/self.std
+
+class ContentMse(nn.Module):
+    def __init__(self, target,):
+        super(ContentMse, self).__init__()
+        self.target = target.detach()
+    
+    def forward(self, input):
+        self.loss = F.mse_loss(input, self.target)
+        return input
+
+class StyleMse(nn.Module):
+    def __init__(self, target_feat):
+        super(StyleMse, self).__init__()
+        self.target = compute_gram(target_feat).detach()
+    
+    def forward(self, input):
+        gram_matrix = compute_gram(input)
+        self.loss = F.mse_loss(gram_matrix, target)
+        return input
+
+def get_loss_modules(cnn, style_img, content_img, mean, std, 
+                    content_layers = content_layers, style_layers = style_layers):
+    
+    cnn = deepcopy(cnn)
+    content_loss, style_loss = [], []
+
+    normalized = Normalize(mean, std).to(device)
+
+    model = nn.Sequential(normalized)
+
+    print(model)
+
+get_loss_modules(cnn, style, content, mean, std)
