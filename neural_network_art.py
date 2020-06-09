@@ -53,6 +53,24 @@ def show_img(tensor, name=None):
 
 plt.figure()
 show_img(style, name="Style image")
-
 plt.figure()
 show_img(content, name="Content image")
+
+# import the pre-trained CNN
+cnn = models.vgg19(pretrained=True).features.to(device).eval()
+
+mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
+std = torch.tensor([0.229, 0.224, 0.225]).to(device)
+
+def normalize(img, mean, std):
+    # Make dimensions of mean and std compatible, so -1 for the number of channels
+    # in the image and 1's for the height and width of the image
+    mean = torch.tensor(mean).view(-1, 1, 1)
+    std = torch.tensor(std).view(-1, 1, 1)
+
+    return (img - mean)/std
+
+print(normalize(style, mean,std))
+
+content_layers_default = ['conv_4']
+style_layers_default = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
