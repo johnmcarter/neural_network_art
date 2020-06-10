@@ -1,5 +1,5 @@
 '''
-Follows tutorial from 
+Portions of code adapted from
 https://pytorch.org/tutorials/advanced/neural_style_tutorial.html
 '''
 
@@ -175,6 +175,7 @@ def get_model_and_losses(cnn, style, content, mean, std,
             model.add_module("style_loss_{}".format(conv_count), loss)
             content_losses.append(loss)
 
+    # Remove layers after the last style and content losses
     for i in range(len(model)-1, -1, -1):
         if isinstance(model[i], ContentMSE) or isinstance(model[i], StyleMSE):
             break
@@ -305,7 +306,7 @@ if __name__ == '__main__':
     plt.show()
 
     # Save the output image in the current directory
-    print("\u001b[1m\033[92mSaving output image in the images directory\033[0m")
+    print("\u001b[1m\033[92mSaving output image to {}\033[0m".format(args.output))
     final_img = output_image[0]
-    save_image(final_img, 'images/output.png')
+    save_image(final_img, args.output)
 
