@@ -268,14 +268,17 @@ if __name__ == '__main__':
                         help='Place to save the output')
     args = parser.parse_args()
 
-    style = load_image("images/{}".format(args.style))
-    content = load_image("images/{}".format(args.content))
+    style = load_image(args.style)
+    content = load_image(args.content)
     input_image = content.clone()
 
-    # Check to make sure content and style are the same size. Exit if they aren't
+    # Check to make sure content and style are the same size. 
+    # If they aren't, make style size match content size.
     if style.size() != content.size():
-        print("\u001b[31mStyle and content photos must be same size!\u001b[0m")
-        exit()
+        print("\u001b[31mStyle and content photos are not the same size.")
+        print("Style image will be scaled to size of content image.\u001b[0m")
+        style = F.interpolate(style, size=(content.shape[2:]), 
+                                mode='bilinear', align_corners=False)
 
     plt.ion()
 
