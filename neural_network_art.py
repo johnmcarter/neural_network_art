@@ -230,11 +230,9 @@ def run(cnn, mean, std, content, style, image, \
             for loss in style_losses:
                 s_score += loss.loss
 
-            # Scale the scores by the weights passed into the function
-            c_score *= content_weight
-            s_score *= style_weight
-
-            total_loss = c_score + s_score
+            # Scale the scores by the weights passed into the function and total
+            # and then to backprop
+            total_loss = c_score*content_weight + s_score*style_weight
             total_loss.backward(retain_graph=True)
 
             run[0] += 1
@@ -261,9 +259,9 @@ if __name__ == '__main__':
     parser.add_argument('style', type=str, help='Style image')
     parser.add_argument('content', type=str, help='Content image')
     parser.add_argument('--sw', type=float, default=1,
-                        help='Style weight (int)')
+                        help='Style weight (float between 0 and 1)')
     parser.add_argument('--cw', type=float, default=1e-5,
-                        help='Content weight (int)')
+                        help='Content weight (float between 0 and 1)')
     parser.add_argument('--output', type=str, default='images/output.png',
                         help='Place to save the output')
     args = parser.parse_args()
@@ -282,14 +280,17 @@ if __name__ == '__main__':
 
     plt.ion()
 
-    # Import the pre-trained CNN
+    # Import the pre-trained CNN from torchvision
     cnn = models.vgg19(pretrained=True).features.to(device).eval()
 
     # Define the style and content layers we'll use in our CNN
+    # The style image will be passed through 5 layers, while the content
+    # image will only need to be passed through 1 layer
     content_layers = ['conv_4']
     style_layers = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5']
 
-    # Set initial mean and standard deviation
+    # Set initial mean and standard deviation based on what the VGG-19
+    # model was trained on
     mean = torch.tensor([0.485, 0.456, 0.406]).to(device)
     std = torch.tensor([0.229, 0.224, 0.225]).to(device)
 
