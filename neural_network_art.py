@@ -145,18 +145,18 @@ def get_model_and_losses(cnn, style, content, mean, std,
         if isinstance(layer, nn.Conv2d):
             conv_count += 1
             layer_name = 'conv_{}'.format(conv_count)
+        # Check if it's a pooling layer
+        elif isinstance(layer, nn.MaxPool2d):
+            layer_name = 'pool_{}'.format(conv_count)
         # Check if it's an activation layer
         elif isinstance(layer, nn.ReLU):
             layer_name = 'relu_{}'.format(conv_count)
             layer = nn.ReLU(inplace=False)
-        # Check if it's a pooling layer
-        elif isinstance(layer, nn.MaxPool2d):
-            layer_name = 'pool_{}'.format(conv_count)
         # Check if it's a batch normalization layer
         elif isinstance(layer, nn.BatchNorm2d):
             layer_name = 'bn_{}'.format(conv_count)
         else:
-            print('\033[91m Unrecognized layer: {} \033[0m'\
+            print('\033[91mUnexpected layer: {} \033[0m'\
                                 .format(layer.__class__.__name__))
 
         model.add_module(layer_name, layer)
@@ -176,11 +176,12 @@ def get_model_and_losses(cnn, style, content, mean, std,
             content_losses.append(loss)
 
     # Remove layers after the last style and content losses
-    for i in range(len(model)-1, -1, -1):
-        if isinstance(model[i], ContentMSE) or isinstance(model[i], StyleMSE):
-            break
+    current_layer = len(model)-1
+    while not isinstance(model[current_layer], StyleMSE) and \
+        not isinstance(model[current_layer], ContentMSE) and (current_layer >= 0):
+        current_layer -= 1
 
-    model = model[:(i+1)]
+    model = model[:(current_layer+1)]
 
     return model, style_losses, content_losses
 
@@ -214,14 +215,14 @@ def run(cnn, mean, std, content, style, image, \
     optimizer = optim.LBFGS([image.requires_grad_()])
 
     run = [0]
-    while run[0] <= epochs:
+    while run[0] < epochs:
         # Define as closure() because it's required by LBFGS
         def closure():
+            s_score = 0
+            c_score = 0
             image.data.clamp_(0,1)
             optimizer.zero_grad()
             model(image)
-            s_score = 0
-            c_score = 0
 
             # Populate all the losses from both content and style
             for loss in content_losses:
@@ -238,7 +239,7 @@ def run(cnn, mean, std, content, style, image, \
 
             run[0] += 1
 
-            # Print current stats
+            # Print current stats every 20 iterations
             if run[0] % 20 == 0:
                 print("\u001b[35mrun iteration {}".format(run))
                 print("\u001b[33mstyle loss: {:4f}".format(s_score.item()))
@@ -249,6 +250,7 @@ def run(cnn, mean, std, content, style, image, \
             
         optimizer.step(closure)
 
+    # Make the output image have values between 0 and 1 - inplace
     image.data.clamp_(0,1)
 
     return image
