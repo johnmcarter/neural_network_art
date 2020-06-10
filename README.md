@@ -17,5 +17,5 @@ python3 neural_network_art.py -h
 ```
 for more explanation about the input parameter options. There is a default value of 1 for style weight, 1e-5 for content weight, and the program saves the output to images/output.png by default. To create an example output.png file with the provided crucifixion.jpg style image and plaza_de_espana.jpg content image, run
 ```
-python3 neural_network_art.py crucifixion.jpg plaza_de_espana.jpg
+python3 neural_network_art.py images/crucifixion.jpg images/plaza_de_espana.jpg
 ```
