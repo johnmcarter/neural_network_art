@@ -260,9 +260,9 @@ if __name__ == '__main__':
         description='Blends a content image and style painting')
     parser.add_argument('style', type=str, help='Style image')
     parser.add_argument('content', type=str, help='Content image')
-    parser.add_argument('--sw', type=int, default=1e5,
+    parser.add_argument('--sw', type=float, default=1,
                         help='Style weight (int)')
-    parser.add_argument('--cw', type=int, default=1,
+    parser.add_argument('--cw', type=float, default=1e-5,
                         help='Content weight (int)')
     parser.add_argument('--output', type=str, default='images/output.png',
                         help='Place to save the output')
