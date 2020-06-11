@@ -15,7 +15,9 @@ in the local directory on the command line. The style and content image, as well
 ```
 python3 neural_network_art.py -h
 ```
-for more explanation about the input parameter options. There is a default value of 1 for style weight, 1e-5 for content weight, and the program saves the output to images/output.png by default. To reproduce the images in Figure 1, run:
+for more explanation about the input parameter options. There is a default value of 1 for style weight, 1e-5 for content weight, and the program saves the output to images/output.png by default. 
+
+To reproduce the images in Figure 1 in the paper, run:
 ```
 python3 neural_network_art.py images/bridge.jpg images/stonehenge.jpg --sw 1 --cw 0.00000001
 python3 neural_network_art.py images/photographer.jpg images/stonehenge.jpg --sw 1 --cw 0.00000001
